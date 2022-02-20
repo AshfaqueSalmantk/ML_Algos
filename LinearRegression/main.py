@@ -33,8 +33,15 @@ class LinearRegression():
 
         '''
         n = X.ndim  # num of dimensions = num of weights
+        m = X.shape[0] # num of datas
 
-        x = np.stack([np.ones(np.size(X)//n),X],axis=1) # add a column of ones to X
+        print(n,X.shape,m)
+        if n ==1 :
+            X = X.reshape((m,1))
+        print(X.shape)
+        # np.stack does not work when attaching onto existing axis
+        # np.concatenate or np.hstack works well, but when passing shape, we must specify 2D shape for np.ones
+        x = np.concatenate([np.ones((m,n)),X],axis=1)
         w = np.zeros(n+1)
 
         return self._gradientDescent(w,x,Y)
