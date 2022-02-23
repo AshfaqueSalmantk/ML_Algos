@@ -2,27 +2,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 import os
-import plot
+import utils
 import pdb
 
 class LogisticRegression():
 
     ''' implementing logistic regression using a straight line and using sigmoid function as hypothesis function '''
 
-    def __init__(self,learning_rate=1e-2,error=1e-10,grad_descent=True):
+    def __init__(self,learning_rate=1e-2,error=1e-10, order=2,grad_descent=True, regularization= True):
+
+        '''
+        arguments:
+        ---------
+        learning_rate = learning rate for gradient descent algorithm
+        error         = stoping criteria for gradient descent algorithm
+        grad_descent  = True ,  when set True: minimize cost using gradient descent algorithm
+                        else, minimize cost using scipy.optimize.minimze function with chosen solver, Truncated newton method is used
+                        in this code
+
+        order         = order of the hypothesis function, 1 indicates straight line, linear
+                        order >1 non-linear  order =2 quadratic, order =3 : cubic
+
+        regularization = Boolean, True to implement regularized logistic regression to avoid overfitting.
+        '''
 
         self.alpha = learning_rate
         self.error = error
         self.option = grad_descent
-        ''' if set True, calculate cost using gradient descent function
-        else, calculate cost using optimize function from scipy library
-        where we can choose which algorithm to use to minimize cost'''
+        self.order = order
+        self.regularization = regularization
+        self.lambda_       = 10
 
     def _sigmoid(self,z):
 
         fun = 1/(1+np.exp(-z))
 
         return fun
+
 
     def _hypothesisFunction(self,weights):
 
@@ -45,9 +61,8 @@ class LogisticRegression():
         '''
 
         self.m = X.shape[0] # number of datas or rows
-        self.n = X.shape[1] # number of columns or dimensions
+        self.n = X.shape[1] # number of dimensions or # of columns
         self.y       = Y
-        self.weights = np.zeros(self.n+1) # initialize as a global variable
 
         # normalize each feature in x for better perfomance
 
@@ -56,10 +71,12 @@ class LogisticRegression():
         self.sigma = np.std(X,axis=0) # standard deviation
 
         x_norm = (X-self.mu)/self.sigma
-        #x_norm = X
 
-        self.x       = np.concatenate([np.ones((self.m,1)),x_norm],axis=1) # this normalized x is passed from now on
+        self.x = utils.mapFeature(x_norm[:,0],x_norm[:,1],degree=self.order)
 
+        self.weights = np.ones(self.x.shape[1])
+
+        print(self.x)
 
         if self.option:
 
@@ -95,7 +112,11 @@ class LogisticRegression():
         ''' compute cost for the given weight'''
 
         func =  -1*np.sum(np.log(self._sigmoid(self._hypothesisFunction(weights)))*self.y + (1-self.y)*np.log(1-self._sigmoid(self._hypothesisFunction(weights))))/self.m
-        return func
+
+        if self.regularization:
+            return func + self.lambda_*np.sum(self.weights[1:]**2/(2*self.m))
+        else:
+            return func
 
 
     def _gradientDescent(self):
@@ -108,9 +129,14 @@ class LogisticRegression():
 
             grad = self.x.T.dot(temp)/self.m
 
-            # update the weights
+            ##condition for regularization
 
-            self.weights= self.weights -self.alpha* grad
+            if self.regularization:
+                grad[1:] = grad[1:] + self.lambda_*self.weights[1:]/self.m
+
+            ##update the weights
+
+            self.weights = self.weights -self.alpha* grad
 
 
             costvalues.append(self._computeCost(self.weights))
@@ -126,7 +152,8 @@ class LogisticRegression():
         x = (Xvalues - self.mu)/self.sigma
 
 
-        xval = np.concatenate([np.ones((m,1)),x],axis=1)
+        xval = utils.mapFeature(x[:,0],x[:,1],degree=self.order)
+        #print(xval.shape)
         yo = self._sigmoid(weights.dot(xval.T)) # predicted output
 
         threshold = 0.5
@@ -139,10 +166,10 @@ class LogisticRegression():
 
 
 def main():
-    logreg = LogisticRegression(grad_descent=True)
+    logreg = LogisticRegression(2,grad_descent=True)
 
 
-    data = np.loadtxt(os.path.join("Data",'ex2data1.txt'),delimiter=',')
+    data = np.loadtxt(os.path.join("Data",'ex2data2.txt'),delimiter=',')
 
     X,y = data[:,0:2],data[:,2]
     weights = logreg.fit(X,y)
@@ -152,10 +179,14 @@ def main():
     mu =  np.mean(X)
     sigma = np.std(X)
     x_norm = (X-mu)/sigma
-    x = np.concatenate([np.ones((n,1)),x_norm],axis=1)
-    plot.plotDecisionBoundary(plot.plotData,weights,x,y)
-    #plot.plt.show()
 
+    x1,x2 = min(x_norm[:,0]) , max(x_norm[:,1])
+
+
+    x_norm  = utils.mapFeature(x_norm[:,0],x_norm[:,1])
+    utils.plotDecisionBoundary(utils.plotData,weights,x_norm,y)
+
+    utils.plt.show()
     ynew = logreg.predict(weights, X)
 
     correct_classification = 0
@@ -167,6 +198,6 @@ def main():
             correct_classification +=1
         count+=1
     print(f"correctly classified: {(correct_classification/count)*100}")
-    #plot.plt.show()
+
 if __name__ == '__main__':
     main()
