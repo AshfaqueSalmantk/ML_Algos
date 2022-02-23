@@ -37,6 +37,8 @@ class LinearRegression():
 
         print(n,X.shape,m)
         if n ==1 :
+            ''' if n ==1, then xdata is one dimensional and will throw and exception when using np.concatenate.
+                So reshape as two dimensional matrix'''
             X = X.reshape((m,1))
         print(X.shape)
         # np.stack does not work when attaching onto existing axis
