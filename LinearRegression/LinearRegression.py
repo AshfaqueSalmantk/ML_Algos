@@ -11,7 +11,7 @@ from scipy import optimize
 
 class LinearRegression():
 
-    def __init__(self,learning_rate=0.01,error=1e-10, order=1, grad_descent=True):
+    def __init__(self,learning_rate=0.01,error=1e-10, order=1, grad_descent=False):
 
         '''
         arguments:
@@ -35,7 +35,18 @@ class LinearRegression():
         self.option = grad_descent
         self.order = order
 
-        #self.regularization = regularization
+
+
+    def _normalize(self,x):
+        ''' normalize the input values for better convergence'''
+
+        self.mu = np.mean(x,axis=0)
+        self.sigma = np.std(x,axis=0)
+
+        x_norm = (x - self.mu)/self.sigma
+
+        return x_norm
+
 
     def _computeCost(self,weights):
 
@@ -83,15 +94,18 @@ class LinearRegression():
         self.n = X.ndim
         self.y = Y
         if self.n > 1 or self.order>1:
-            self.X = utils.mapFeature(X[:,0],X[:,1],self.order)
+            self.xnorm = self._normalize(self.X)
+            self.x = utils.mapFeature(self.xnorm[:,0],xnorm[:,1],self.order)
         elif self.n==1 and self.order > 1:
             ''' model according to the data, for example: w0 + w1x1 + w2x1^2 could be a model or x1^0.5 could be another '''
             pass
         else:
 
             self.X = X.reshape((self.m,1))
-            self.x = np.concatenate([np.ones((self.m,1)),self.X],axis=1)
-
+            self.xnorm = self._normalize(self.X)
+            #self.xnorm = self.X
+            self.x = np.concatenate([np.ones((self.m,1)),self.xnorm],axis=1)
+            print(self.x[:10,:])
         self.weights = np.zeros(self.x.shape[1])
 
         if self.option:
@@ -137,13 +151,15 @@ class LinearRegression():
         Y : a (m,) vector
 
         '''
+        xnorm = self._normalize(X)
+        #xnorm = X
 
-        return weights[0] + weights[1]*X
+        return weights[0] + weights[1]*xnorm
 
 
 def main():
 
-    linreg = LinearRegression()
+    linreg = LinearRegression(grad_descent=True)
 
     data =  np.loadtxt(os.path.join('Data','ex1data1.txt'),delimiter=',')
 
