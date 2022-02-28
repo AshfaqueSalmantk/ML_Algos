@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pdb
 
-
-def mapFeature(X1,X2,degree=1):
+def mapFeature(X1,X2,degree=6):
 
     """
     Maps the two input features to quadratic features used in the regularization exercise.
@@ -62,7 +62,7 @@ def plotData(X,Y):
 
     return
 
-def plotDecisionBoundary(plotData, theta, X, y):
+def plotDecisionBoundary(plotData, theta, X, y, order = 1):
     """
     Plots the data points X and y into a new figure with the decision boundary defined by theta.
     Plots the data points with * for the positive examples and o for  the negative examples.
@@ -85,7 +85,7 @@ def plotDecisionBoundary(plotData, theta, X, y):
     """
     # make sure theta is a numpy array
     theta = np.array(theta)
-
+    #pdb.set_trace()
     # Plot Data (remember first column in X is the intercept)
     plotData(X[:, 1:3], y)
 
@@ -113,7 +113,7 @@ def plotDecisionBoundary(plotData, theta, X, y):
         # Evaluate z = theta*x over the grid
         for i, ui in enumerate(u):
             for j, vj in enumerate(v):
-                z[i, j] = np.dot(mapFeature(ui, vj), theta)
+                z[i, j] = np.dot(mapFeature(ui, vj,order), theta)
 
         z = z.T  # important to transpose z before calling contour
         # print(z)

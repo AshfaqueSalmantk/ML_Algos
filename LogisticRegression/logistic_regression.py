@@ -8,8 +8,8 @@ import pdb
 class LogisticRegression():
 
     ''' implementing logistic regression using a straight line and using sigmoid function as hypothesis function '''
-        "asdad"
-    def __init__(self,learning_rate=1e-2,error=1e-10, order=3,grad_descent=True, regularization= True):
+
+    def __init__(self,learning_rate=1e-2,error=1e-10, order=6, lambda_=0,grad_descent=False,):
 
         '''
         arguments:
@@ -23,15 +23,15 @@ class LogisticRegression():
         order         = order of the hypothesis function, 1 indicates straight line, linear
                         order >1 non-linear  order =2 quadratic, order =3 : cubic
 
-        regularization = Boolean, True to implement regularized logistic regression to avoid overfitting.
+
         '''
 
         self.alpha = learning_rate
         self.error = error
         self.option = grad_descent
         self.order = order
-        self.regularization = regularization
-        self.lambda_       = 10
+
+        self.lambda_       = lambda_
 
     def _sigmoid(self,z):
 
@@ -39,44 +39,34 @@ class LogisticRegression():
 
         return fun
 
+    def _computeCost(self,weights):
 
-    def _hypothesisFunction(self,weights):
+        ''' compute the cost for current weights '''
 
-        ''' return a function which is best for the classification:
-        for example, for linear classification, function is a straight line,
-                     for non-linear classification, function could be any curve containing higher orders'''
+        J = -1*np.sum(np.log(self._sigmoid(weights.dot(self.x.T)))*self.y + (1-self.y)*np.log(1-self._sigmoid(weights.dot(self.x.T))))/self.m
 
-        func = weights.dot(self.x.T) # this is simply a straight line
+        Jnew = J + self.lambda_*np.sum(weights[1:]**2)/(2*self.m)
 
-        return func
-
+        return Jnew
 
     def fit(self,X,Y):
         ''' inputs:
-        X : an array of shape (m,n)
+        X : an array of shape (m,n) , n >=2
         Y : a array of shape (m,)
 
         output:
         optimized weights for classification
         '''
 
-        self.m = X.shape[0] # number of datas or rows
-        self.n = X.shape[1] # number of dimensions or # of columns
-        self.y       = Y
+        self.m = X.shape[0]
 
-        # normalize each feature in x for better perfomance
+        self.x = utils.mapFeature(X[:,0],X[:,1],self.order)
+        self.y = Y
 
-        ''' keep the record of mean and variance to be passed when predicting new x not found in the training set'''
-        self.mu =  np.mean(X,axis=0)  #mean
-        self.sigma = np.std(X,axis=0) # standard deviation
+        self.weights = np.zeros(self.x.shape[1])
 
-        x_norm = (X-self.mu)/self.sigma
 
-        self.x = utils.mapFeature(X[:,0],X[:,1],degree=self.order)
 
-        self.weights = np.ones(self.x.shape[1])
-
-        print(self.x.shape)
 
         if self.option:
 
@@ -107,108 +97,39 @@ class LogisticRegression():
 
             return theta
 
-    def _computeCost(self,weights):
+    def predict(self,weights,X):
+        ''' predict the output of new input x values'''
 
-        ''' compute cost for the given weight'''
-
-        #Jold = -1*np.sum(np.log(sigmoid(theta.dot(X.T)))*y + (1-y)*np.log(1-sigmoid(theta.dot(X.T))))/m
-        #Jnew = Jold + lambda_*np.sum(theta[1:]**2)/(2*m)
-
-
-        func =  -1*np.sum(np.log(self._sigmoid(self._hypothesisFunction(weights)))*self.y + (1-self.y)*np.log(1-self._sigmoid(self._hypothesisFunction(weights))))/self.m
-
-        J  = func + self.lambda_*np.sum(self.weights[1:]**2)/(2*self.m)
-
-        return J
-
-        #if self.regularization:
-            #return func + self.lambda_*np.sum(self.weights[1:]**2/(2*self.m))
-        #else:
-            #return func
-
-
-    def _gradientDescent(self):
-
-
-        costvalues = [0]
-        while True:
-
-            temp = self._sigmoid(self._hypothesisFunction(self.weights))-self.y        # calculate the error;  sigmoid(w.dot(x.T)) - y
-
-            grad = self.x.T.dot(temp)/self.m
-
-            ##condition for regularization
-
-            if self.regularization:
-                grad[1:] = grad[1:] + self.lambda_*self.weights[1:]/self.m
-
-            ##update the weights
-
-            self.weights = self.weights -self.alpha* grad
-
-
-            costvalues.append(self._computeCost(self.weights))
-
-            if abs(costvalues[-1]-costvalues[-2]) <= self.error:
-                return self.weights
-
-    def predict(self,weights,Xvalues):
-        ''' predict new input using optimized weights'''
-
-        m = Xvalues.shape[0]
-        # find the new output
-        x = (Xvalues - self.mu)/self.sigma
-
-
-        xval = utils.mapFeature(x[:,0],x[:,1],degree=self.order)
-        #print(xval.shape)
-        yo = self._sigmoid(weights.dot(xval.T)) # predicted output
-
-        threshold = 0.5
+        yo = self._sigmoid(weights[0]+weights[1]*x)
 
         yo[yo>=0.5] = 1
-        yo[yo < 0.5] =0
+        yo[yo<0.5] = 0
 
         return yo
 
 
 
 def main():
-    logreg = LogisticRegression(grad_descent=False)
 
+    data = np.loadtxt(os.path.join('Data','ex2data2.txt'),delimiter=',')
 
-    data = np.loadtxt(os.path.join("Data",'ex2data1.txt'),delimiter=',')
+    X,Y  = data[:,0:2], data[:,2]
 
-    X,y = data[:,0:2],data[:,2]
-    weights = logreg.fit(X,y)
-    print(weights)
+    logreg = LogisticRegression(order=1,lambda_=1)
 
-    n = X.shape[0]
-    mu =  np.mean(X)
-    sigma = np.std(X)
-    X_norm = (X-mu)/sigma
+    print(X.shape)
+    w = logreg.fit(X,Y)
 
-    #x1,x2 = min(x_norm[:,0]) , max(x_norm[:,1])
+    print(w)
 
-
-    x_norm  = utils.mapFeature(X[:,0],X[:,1],3)
-    print(x_norm.shape,weights.shape)
-
-    #utils.plotData(X[:,0],X[:,1])
-    utils.plotDecisionBoundary(utils.plotData,weights,x_norm,y)
-
+    # finding new X for order 6
+    n = 1
+    lambda_ = 1
+    x = utils.mapFeature(X[:,0],X[:,1],n)
+    utils.plotDecisionBoundary(utils.plotData,w,x,Y,n)
+    utils.plt.xlim(-2,2)
+    utils.plt.ylim(-2,2)
     utils.plt.show()
-    ynew = logreg.predict(weights, X)
 
-    correct_classification = 0
-    count = 0
-
-    for i in range(ynew.shape[0]):
-
-        if ynew[i] == y[i]:
-            correct_classification +=1
-        count+=1
-    print(f"correctly classified: {(correct_classification/count)*100}")
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
