@@ -8,7 +8,7 @@ import pdb
 class LogisticRegression():
 
     ''' implementing logistic regression using a straight line and using sigmoid function as hypothesis function '''
-
+        "asdad"
     def __init__(self,learning_rate=1e-2,error=1e-10, order=3,grad_descent=True, regularization= True):
 
         '''
