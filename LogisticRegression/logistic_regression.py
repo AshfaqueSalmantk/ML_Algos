@@ -9,7 +9,7 @@ class LogisticRegression():
 
     ''' implementing logistic regression using a straight line and using sigmoid function as hypothesis function '''
 
-    def __init__(self,learning_rate=1e-2,error=1e-10, order=2,grad_descent=True, regularization= True):
+    def __init__(self,learning_rate=1e-2,error=1e-10, order=3,grad_descent=True, regularization= True):
 
         '''
         arguments:
@@ -72,11 +72,11 @@ class LogisticRegression():
 
         x_norm = (X-self.mu)/self.sigma
 
-        self.x = utils.mapFeature(x_norm[:,0],x_norm[:,1],degree=self.order)
+        self.x = utils.mapFeature(X[:,0],X[:,1],degree=self.order)
 
         self.weights = np.ones(self.x.shape[1])
 
-        print(self.x)
+        print(self.x.shape)
 
         if self.option:
 
@@ -111,12 +111,20 @@ class LogisticRegression():
 
         ''' compute cost for the given weight'''
 
+        #Jold = -1*np.sum(np.log(sigmoid(theta.dot(X.T)))*y + (1-y)*np.log(1-sigmoid(theta.dot(X.T))))/m
+        #Jnew = Jold + lambda_*np.sum(theta[1:]**2)/(2*m)
+
+
         func =  -1*np.sum(np.log(self._sigmoid(self._hypothesisFunction(weights)))*self.y + (1-self.y)*np.log(1-self._sigmoid(self._hypothesisFunction(weights))))/self.m
 
-        if self.regularization:
-            return func + self.lambda_*np.sum(self.weights[1:]**2/(2*self.m))
-        else:
-            return func
+        J  = func + self.lambda_*np.sum(self.weights[1:]**2)/(2*self.m)
+
+        return J
+
+        #if self.regularization:
+            #return func + self.lambda_*np.sum(self.weights[1:]**2/(2*self.m))
+        #else:
+            #return func
 
 
     def _gradientDescent(self):
@@ -166,10 +174,10 @@ class LogisticRegression():
 
 
 def main():
-    logreg = LogisticRegression(2,grad_descent=True)
+    logreg = LogisticRegression(grad_descent=False)
 
 
-    data = np.loadtxt(os.path.join("Data",'ex2data2.txt'),delimiter=',')
+    data = np.loadtxt(os.path.join("Data",'ex2data1.txt'),delimiter=',')
 
     X,y = data[:,0:2],data[:,2]
     weights = logreg.fit(X,y)
@@ -178,12 +186,15 @@ def main():
     n = X.shape[0]
     mu =  np.mean(X)
     sigma = np.std(X)
-    x_norm = (X-mu)/sigma
+    X_norm = (X-mu)/sigma
 
-    x1,x2 = min(x_norm[:,0]) , max(x_norm[:,1])
+    #x1,x2 = min(x_norm[:,0]) , max(x_norm[:,1])
 
 
-    x_norm  = utils.mapFeature(x_norm[:,0],x_norm[:,1])
+    x_norm  = utils.mapFeature(X[:,0],X[:,1],3)
+    print(x_norm.shape,weights.shape)
+
+    #utils.plotData(X[:,0],X[:,1])
     utils.plotDecisionBoundary(utils.plotData,weights,x_norm,y)
 
     utils.plt.show()

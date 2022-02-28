@@ -54,13 +54,14 @@ def plotData(X,Y):
 
     plt.figure(1,figsize=(8,7))
 
-    plt.plot( X[pos,0], X[pos,1], 'k*', lw=2, ms=10)
+    plt.plot(X[pos,0], X[pos,1], 'k*', lw=2, ms=10)
 
     plt.plot(X[neg,0] , X[neg,1] , 'yo', ms=8 , mec='k',mew=1)
 
 
 
     return
+
 def plotDecisionBoundary(plotData, theta, X, y):
     """
     Plots the data points X and y into a new figure with the decision boundary defined by theta.
@@ -100,9 +101,10 @@ def plotDecisionBoundary(plotData, theta, X, y):
 
         # Legend, specific for the exercise
         plt.legend(['Admitted', 'Not admitted', 'Decision Boundary'])
-        plt.xlim([-3, 3])
-        plt.ylim([-3, 3])
+        #plt.xlim([30, 100])
+        #plt.ylim([30, 100])
     else:
+        print('in else')
         # Here is the grid range
         u = np.linspace(-1, 1.5, 50)
         v = np.linspace(-1, 1.5, 50)
